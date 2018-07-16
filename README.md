@@ -15,3 +15,7 @@ https://classroom.udacity.com/courses/ud855/lessons/f133dd92-8e3c-40b9-9d9d-5454
 
 ![](/images/service.png)
 ![](/images/task.png)
+
+### Update Widgets
+
+![](/images/update.png)

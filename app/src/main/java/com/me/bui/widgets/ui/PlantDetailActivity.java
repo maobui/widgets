@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.me.bui.widgets.R;
 import com.me.bui.widgets.provider.PlantContract;
+import com.me.bui.widgets.service.PlantWateringService;
 import com.me.bui.widgets.utils.PlantUtils;
 
 
@@ -56,6 +57,7 @@ public class PlantDetailActivity extends AppCompatActivity
         contentValues.put(PlantContract.PlantEntry.COLUMN_LAST_WATERED_TIME, timeNow);
         getContentResolver().update(SINGLE_PLANT_URI, contentValues, null, null);
         cursor.close();
+        PlantWateringService.startActionUpdatePlantWidgets(this);
     }
 
     @Override
@@ -108,6 +110,7 @@ public class PlantDetailActivity extends AppCompatActivity
         Uri SINGLE_PLANT_URI = ContentUris.withAppendedId(
                 PlantContract.BASE_CONTENT_URI.buildUpon().appendPath(PlantContract.PATH_PLANTS).build(), mPlantId);
         getContentResolver().delete(SINGLE_PLANT_URI, null, null);
+        PlantWateringService.startActionUpdatePlantWidgets(this);
         finish();
     }
 }

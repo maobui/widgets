@@ -11,6 +11,7 @@ import android.widget.ImageView;
 
 import com.me.bui.widgets.R;
 import com.me.bui.widgets.provider.PlantContract;
+import com.me.bui.widgets.service.PlantWateringService;
 
 
 public class AddPlantActivity extends AppCompatActivity {
@@ -50,6 +51,7 @@ public class AddPlantActivity extends AppCompatActivity {
         contentValues.put(PlantContract.PlantEntry.COLUMN_CREATION_TIME, timeNow);
         contentValues.put(PlantContract.PlantEntry.COLUMN_LAST_WATERED_TIME, timeNow);
         getContentResolver().insert(PlantContract.PlantEntry.CONTENT_URI, contentValues);
+        PlantWateringService.startActionUpdatePlantWidgets(this);
         // Close this activity
         finish();
     }
