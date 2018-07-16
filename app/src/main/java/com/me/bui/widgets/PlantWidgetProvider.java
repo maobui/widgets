@@ -22,6 +22,9 @@ public class PlantWidgetProvider extends AppWidgetProvider {
 
         // Update image
         views.setImageViewResource(R.id.widget_plant_image, imgRes);
+        Intent intent = new Intent(context, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        views.setOnClickPendingIntent(R.id.widget_plant_image, pendingIntent);
 
         // Add the wateringservice click handler
         Intent wateringIntent = new Intent(context, PlantWateringService.class);
@@ -59,5 +62,11 @@ public class PlantWidgetProvider extends AppWidgetProvider {
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
     }
+
+    @Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        // Perform any action when one or more AppWidget instances have been deleted
+    }
+
 }
 
