@@ -1,10 +1,13 @@
 package com.me.bui.widgets;
 
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -14,6 +17,8 @@ import com.me.bui.widgets.service.PlantWateringService;
 import com.me.bui.widgets.ui.MainActivity;
 import com.me.bui.widgets.ui.PlantDetailActivity;
 
+import java.util.Set;
+
 /**
  * Implementation of App Widget functionality.
  */
@@ -21,44 +26,24 @@ public class PlantWidgetProvider extends AppWidgetProvider {
 
     private static final String TAG = PlantWidgetProvider.class.getSimpleName();
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int imgRes, long plantId, boolean showWater, int appWidgetId) {
-        // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.plant_widget_provider);
 
-        // Update image
-        views.setImageViewResource(R.id.widget_plant_image, imgRes);
-        Intent intent;
-        if (plantId == PlantContract.INVALID_PLANT_ID) {
-            intent = new Intent(context, MainActivity.class);
-        } else { // Set on click to open the corresponding detail activity
-            Log.d(TAG, "plantId=" + plantId);
-            intent = new Intent(context, PlantDetailActivity.class);
-            intent.putExtra(PlantDetailActivity.EXTRA_PLANT_ID, plantId);
+        // Get current width to decide on single plant vs garden grid view
+        Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
+        int width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
+        RemoteViews rv;
+        if (width < 300) {
+            rv = getSinglePlantRemoteView(context, imgRes, plantId, showWater);
+        } else {
+            rv = getGardenGridRemoteView(context);
         }
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-        views.setOnClickPendingIntent(R.id.widget_plant_image, pendingIntent);
+        appWidgetManager.updateAppWidget(appWidgetId, rv);
 
-        // Update plant ID text
-        views.setTextViewText(R.id.widget_plant_name, String.valueOf(plantId));
-        // Show/Hide the water drop button
-        if (showWater) views.setViewVisibility(R.id.widget_water_button, View.VISIBLE);
-        else views.setViewVisibility(R.id.widget_water_button, View.INVISIBLE);
 
-        // Add the wateringservice click handler
-        Intent wateringIntent = new Intent(context, PlantWateringService.class);
-        wateringIntent.setAction(PlantWateringService.ACTION_WATER_PLANT);
-        wateringIntent.putExtra(PlantWateringService.EXTRA_PLANT_ID, plantId);
-        PendingIntent wateringPendingIntent = PendingIntent.getService(
-                context,
-                0,
-                wateringIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        views.setOnClickPendingIntent(R.id.widget_water_button, wateringPendingIntent);
-
-        // Instruct the widget manager to update the widget
-        appWidgetManager.updateAppWidget(appWidgetId, views);
     }
+
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -88,5 +73,46 @@ public class PlantWidgetProvider extends AppWidgetProvider {
         // Perform any action when one or more AppWidget instances have been deleted
     }
 
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
+        PlantWateringService.startActionUpdatePlantWidgets(context);
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+    }
+
+    private static RemoteViews getSinglePlantRemoteView(Context context, int imgRes, long plantId, boolean showWater) {
+        // Set the click handler to open the DetailActivity for plant ID,
+        // or the MainActivity if plant ID is invalid
+        Intent intent;
+        if (plantId == PlantContract.INVALID_PLANT_ID) {
+            intent = new Intent(context, MainActivity.class);
+        } else { // Set on click to open the corresponding detail activity
+            Log.d(PlantWidgetProvider.class.getSimpleName(), "plantId=" + plantId);
+            intent = new Intent(context, PlantDetailActivity.class);
+            intent.putExtra(PlantDetailActivity.EXTRA_PLANT_ID, plantId);
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // Construct the RemoteViews object
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.plant_widget_provider);
+        // Update image and text
+        views.setImageViewResource(R.id.widget_plant_image, imgRes);
+        views.setTextViewText(R.id.widget_plant_name, String.valueOf(plantId));
+        // Show/Hide the water drop button
+        if (showWater) views.setViewVisibility(R.id.widget_water_button, View.VISIBLE);
+        else views.setViewVisibility(R.id.widget_water_button, View.INVISIBLE);
+        // Widgets allow click handlers to only launch pending intents
+        views.setOnClickPendingIntent(R.id.widget_plant_image, pendingIntent);
+        // Add the wateringservice click handler
+        Intent wateringIntent = new Intent(context, PlantWateringService.class);
+        wateringIntent.setAction(PlantWateringService.ACTION_WATER_PLANT);
+        // Add the plant ID as extra to water only that plant when clicked
+        wateringIntent.putExtra(PlantWateringService.EXTRA_PLANT_ID, plantId);
+        PendingIntent wateringPendingIntent = PendingIntent.getService(context, 0, wateringIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        views.setOnClickPendingIntent(R.id.widget_water_button, wateringPendingIntent);
+        return views;
+    }
+
+    private static RemoteViews getGardenGridRemoteView(Context context) {
+        return null;
+    }
 }
 
