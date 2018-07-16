@@ -10,3 +10,8 @@ https://classroom.udacity.com/courses/ud855/lessons/f133dd92-8e3c-40b9-9d9d-5454
 
 ![](/images/normal.png)
 ![](/images/remote.png)
+
+### Background Taks for Widgets
+
+![](/images/service.png)
+![](/images/task.png)
