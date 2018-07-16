@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import com.me.bui.widgets.provider.PlantContract;
+import com.me.bui.widgets.service.GridWidgetService;
 import com.me.bui.widgets.service.PlantWateringService;
 import com.me.bui.widgets.ui.MainActivity;
 import com.me.bui.widgets.ui.PlantDetailActivity;
@@ -112,7 +113,17 @@ public class PlantWidgetProvider extends AppWidgetProvider {
     }
 
     private static RemoteViews getGardenGridRemoteView(Context context) {
-        return null;
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_gridview);
+        // Set the GridWidgetService intent to act as the adapter for the GridView
+        Intent intent = new Intent(context, GridWidgetService.class);
+        views.setRemoteAdapter(R.id.widget_grid_view, intent);
+        // Set the PlantDetailActivity intent to launch when clicked
+        Intent appIntent = new Intent(context, PlantDetailActivity.class);
+        PendingIntent appPendingIntent = PendingIntent.getActivity(context, 0, appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        views.setPendingIntentTemplate(R.id.widget_grid_view, appPendingIntent);
+        // Handle empty gardens
+        views.setEmptyView(R.id.widget_grid_view, R.id.empty_view);
+        return views;
     }
 }
 
